@@ -124,7 +124,7 @@ void testPB(uint8_t numGPIO){
             break;
     }
     if(epb==TWICE){
-        printf("Well done!!! Event detected");
+        printf("Well done!!!  Event detected");
     }
     else{
         printf("We might have a problem!!! TWICE event wasn't detected in the last 5 seconds");
