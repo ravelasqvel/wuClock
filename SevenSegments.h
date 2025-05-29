@@ -13,76 +13,14 @@
  #define __SEVEN_SEGMENTS_H
 
  #include "TimeBase.h"
+ #include "hardware/gpio.h"
+ #include <stdint.h>
 
  #define SS_MAXD 18 ///< Maximum number of Displays for RPP
  #define SS_DOFF_CC 0x00 ///< segments code to turn off display in a common cathode
  #define SS_DOFF_CA 0xFF ///< segments code to turn off display in a common anode
 
- const uint8_t SS_CODES_CC[] = {
-    // abcdefgp
-     0b11111100,  // 0 0
-     0b01100000,  // 1 1
-     0b11011010,  // 2 2
-     0b11110010,  // 3 3
-     0b01100110,  // 4 4
-     0b10110110,  // 5 5 y S
-     0b10111110,  // 6 6
-     0b11100000,  // 7 7
-     0b11111110,  // 8 8
-     0b11110110,  // 9 9
-     0b11101110,  // 10 A
-     0b00111110,  // 11 b
-     0b10011100,  // 12 C
-     0b01111010,  // 13 d
-     0b10011110,  // 14 E
-     0b10001110,  // 15 F
-     0b11011110,  // 16 g
-     0b00101010,  // 17 h
-     0b01100000,  // 18 I
-     0b11110000,  // 19 J
-     0b00011100,  // 20 L
-     0b00101010,  // 21 n
-     0b00111010,  // 22 o
-     0b11001110,  // 23 P
-     0b11100110,  // 24 q
-     0b00001010,  // 25 r
-     0b00011110,  // 26 t
-     0b00111000,  // 27 u
-     0b01111100   // 28 U
- };
 
- const uint8_t SS_CODES_CA[] = {
-    // abcdefgp
-     0b00000011,  // 0 0
-     0b10011111,  // 1 1
-     0b00100101,  // 2 2
-     0b00001101,  // 3 3 CA
-     0b10011001,  // 4 4 CA
-     0b01001001,  // 5 5 y S CA
-     0b01000001,  // 6 6 CA
-     0b00011111,  // 7 7 CA
-     0b00000001,  // 8 8 CA
-     0b00001001,  // 9 9 CA
-     0b00010001,  // 10 A CA
-     0b11000001,  // 11 b CA
-     0b01100011,  // 12 C CA
-     0b10000101,  // 13 d CA
-     0b01100001,  // 14 E CA
-     0b01110001,  // 15 F CA
-     0b00100001,  // 16 g CA
-     0b11010101,  // 17 h CA
-     0b10011111,  // 18 I CA
-     0b00001111,  // 19 J CA
-     0b11100011,  // 20 L CA
-     0b11010101,  // 21 n CA
-     0b11000101,  // 22 o CA
-     0b00110001,  // 23 P CA
-     0b00011001,  // 24 q CA
-     0b11110101,  // 25 r CA
-     0b11100001,  // 26 t CA
-     0b11000111,  // 27 u CA
-     0b10000011   // 28 U CA
- };
 
 typedef enum{COMMON_CATHODE, COMMON_ANODE} ss_type_t;
 

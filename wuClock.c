@@ -123,13 +123,17 @@ void testPB(uint8_t numGPIO){
         if(tb_check(&tout))
             break;
     }
-    if(epb==TWICE){
+    if(epb==TWICE)
+    {
+        
         printf("Well done!!!  Event detected");
     }
     else{
+
         printf("We might have a problem!!! TWICE event wasn't detected in the last 5 seconds");
     }
 }
+
 
 void testBuzzer(uint8_t numGPIO){
     buzzer_t B;

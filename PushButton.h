@@ -25,7 +25,7 @@ typedef struct{
     } BITS;
     time_base_t pbTBEvent;
     time_base_t pbTBDebouncer;
-    void (*PBProcess) (push_button_t * PB);
+    void (*PBProcess) (void * PB);
     pb_event_t PBEvent;
 } push_button_t;
 
