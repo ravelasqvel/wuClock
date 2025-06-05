@@ -14,8 +14,8 @@
 
 typedef struct{
     struct{
-        uint8_t gpioNum     : 5;
-        uint8_t alarmNum    : 2;
+        uint8_t gpioNum     : 5; ///< GPIO number for the push button
+        uint8_t alarmNum    : 2; ///< Timer alarm number associated with the push button
         uint8_t pwmNum      : 3;
         bool eventON        : 1;
         uint16_t eventT_ms  : 16;

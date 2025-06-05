@@ -241,7 +241,15 @@ void t4h_stop_post(time_h_t * T){
  * \param date Pointer to a datetime_t structure where the current date will be stored
  * \details This function retrieves the current date from the time handler and stores it in the provided datetime_t structure.
  */
-void t4h_get_date(time_h_t * T, datetime_t * date);
+void t4h_get_date(time_h_t * T, datetime_t * date){
+    date->day = T->date.day;
+    date->month = T->date.month;
+    date->year = T->date.year;
+    date->dotw = T->date.dotw;
+    date->hour = T->date.hour;
+    date->min = T->date.min;
+    date->sec = T->date.sec;
+}
 
 /**
  * \fn uint8_t t4h_get_hour(time_h_t * T)
@@ -250,7 +258,9 @@ void t4h_get_date(time_h_t * T, datetime_t * date);
  * \returns The current hour (0-23)
  * \details This function retrieves the current hour from the time handler.
  */
-uint8_t t4h_get_hour(time_h_t * T);
+uint8_t t4h_get_hour(time_h_t * T){
+    return T->date.hour;
+}
 
 /**
  * \fn uint8_t t4h_get_minute(time_h_t * T)
@@ -259,7 +269,9 @@ uint8_t t4h_get_hour(time_h_t * T);
  * \returns The current minute (0-59)
  * \details This function retrieves the current minute from the time handler.
  */
-uint8_t t4h_get_minute(time_h_t * T);
+uint8_t t4h_get_minute(time_h_t * T){
+    return T->date.min;
+}
 
 /**
  * \fn uint8_t t4h_get_second(time_h_t * T)
@@ -268,7 +280,9 @@ uint8_t t4h_get_minute(time_h_t * T);
  * \returns The current second (0-59)
  * \details This function retrieves the current second from the time handler.
  */
-uint8_t t4h_get_second(time_h_t * T);
+uint8_t t4h_get_second(time_h_t * T){
+    return T->date.sec;
+}
 
 /**
  * \fn uint8_t t4h_get_day(time_h_t * T)
@@ -277,7 +291,9 @@ uint8_t t4h_get_second(time_h_t * T);
  * \returns The current day of the month (1-31)
  * \details This function retrieves the current day from the time handler.
  */
-uint8_t t4h_get_day(time_h_t * T);
+uint8_t t4h_get_day(time_h_t * T){
+    return T->date.day;
+}
 /**
  * \fn uint8_t t4h_get_dotw(time_h_t * T)
  * \brief Get the current day of the week from the time handler
@@ -285,7 +301,9 @@ uint8_t t4h_get_day(time_h_t * T);
  * \returns The current day of the week (0-6, where 0 is Sunday)
  * \details This function retrieves the current day of the week from the time handler.
  */
-uint8_t t4h_get_dotw(time_h_t * T);
+uint8_t t4h_get_dotw(time_h_t * T){
+    return T->date.dotw;
+}
 
 /**
  * \fn uint8_t t4h_get_month(time_h_t * T)
@@ -294,7 +312,9 @@ uint8_t t4h_get_dotw(time_h_t * T);
  * \returns The current month (1-12)
  * \details This function retrieves the current month from the time handler.
  */
-uint8_t t4h_get_month(time_h_t * T);
+uint8_t t4h_get_month(time_h_t * T){
+    return T->date.month;
+}
 
 /**
  * \fn uint16_t t4h_get_year(time_h_t * T)
