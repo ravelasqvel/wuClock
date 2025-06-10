@@ -9,16 +9,18 @@
 
 
 
- #ifndef __SEVEN_SEGMENTS_H
- #define __SEVEN_SEGMENTS_H
+#ifndef __SEVEN_SEGMENTS_H
+#define __SEVEN_SEGMENTS_H
 
- #include "TimeBase.h"
- #include "hardware/gpio.h"
- #include <stdint.h>
+#include "TimeBase.h"
+#include "hardware/gpio.h"
+#include "pico/stdlib.h"
+#include <stdint.h>
+#include <stdio.h>
 
- #define SS_MAXD 18 ///< Maximum number of Displays for RPP
- #define SS_DOFF_CC 0x00 ///< segments code to turn off display in a common cathode
- #define SS_DOFF_CA 0xFF ///< segments code to turn off display in a common anode
+#define SS_MAXD 18 ///< Maximum number of Displays for RPP
+#define SS_DOFF_CC 0x00 ///< segments code to turn off display in a common cathode
+#define SS_DOFF_CA 0xFF ///< segments code to turn off display in a common anode
 
 
 
@@ -210,4 +212,7 @@ static inline void ss_disable_display(ss_config_t *SS, uint8_t digit){
     SS->blinkMask |= (1<<digit);
 }
 
+void testSSDisplay(uint32_t segMask, uint32_t disMask, uint8_t numD){
+
+}
  #endif

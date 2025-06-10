@@ -4,11 +4,14 @@
  * \author RAVV
  */
 
- #ifndef __PUSH_BUTTON_H
- #define __PUSH_BUTTON_H
+#ifndef __PUSH_BUTTON_H
+#define __PUSH_BUTTON_H
 
- #include <stdint.h>
- #include "TimeBase.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "TimeBase.h"
 
  typedef enum{NONE, ONCE, TWICE, MORE} pb_event_t;
 
@@ -76,6 +79,49 @@ static inline void pb_set_event_period(push_button_t *PB, uint16_t T){
  */
 static inline void pb_set_debouncer_period(push_button_t *PB, uint16_t T){
     PB->BITS.debT_ms = T;
+}
+
+void testPB(uint8_t numGPIO){
+    push_button_t PB;
+    pb_init(&PB,0,0,numGPIO);
+    printf("TESTING PUSH BUTTON!!!!\n");
+    sleep_ms(1000);
+    printf("Let's capture an event ONCE.\n\n Please press push button once...\n");
+    pb_event_t epb = NONE;
+    time_base_t tout;
+    tb_init(&tout,5000000,true);
+    while(epb==NONE){
+        PB.PBProcess(&PB);
+        epb = pb_get_event(&PB);
+        if(tb_check(&tout))
+            break;
+    }
+    if(epb==ONCE){
+        printf("Well done!!! Event detected");
+    }
+    else{
+        printf("We might have a problem!!! ONCE event wasn't detected in the last 5 seconds");
+    }
+    sleep_ms(1000);
+
+    printf("Let's capture an event TWICE.\n\n Please press push button twice in less than one second...\n");
+    epb = NONE;
+    tb_init(&tout,5000000,true);
+    while(epb==NONE){
+        PB.PBProcess(&PB);
+        epb = pb_get_event(&PB);
+        if(tb_check(&tout))
+            break;
+    }
+    if(epb==TWICE)
+    {
+        
+        printf("Well done!!!  Event detected");
+    }
+    else{
+
+        printf("We might have a problem!!! TWICE event wasn't detected in the last 5 seconds");
+    }
 }
 
  #endif

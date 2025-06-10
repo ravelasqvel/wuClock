@@ -13,6 +13,7 @@
 #define PICO_INCLUDE_RTC_DATETIME
 
 #include <stdint.h>
+#include <stdio.h>
 #include "hardware/rtc.h"
 #include "pico/types.h"
 #include "TimeBase.h"
@@ -28,7 +29,7 @@ typedef struct {
 } datetime_t;
 
 typedef enum {T4H_DAILY_ALARM,T4H_WEEKLY_ALARM, T4H_DATE_ALARM} alarm_type_t;
-typedef enum {T4H_ALARM_ON, T4H_ALARM_OFF, T4H_ALARM_SUSPENDED} alarm_state_t;
+typedef enum {T4H_ALARM_READY,T4H_ALARM_ON, T4H_ALARM_OFF, T4H_ALARM_SUSPENDED} alarm_state_t;
 typedef enum {T4H_SUNDAY, T4H_MONDAY, T4H_TUESDAY, T4H_WEDNESDAY, T4H_THURSDAY, T4H_FRIDAY, T4H_SATURDAY} dotw_t;
 
 typedef struct{
@@ -39,6 +40,7 @@ typedef struct{
     time_base_t postTB;
     time_base_t refreshTB;
     uint8_t postPeriod;
+    bool time2Refresh;
 }time_h_t;\
 
 /**
@@ -336,9 +338,35 @@ uint16_t t4h_get_year(time_h_t * T);
  * \note This function should be called in the main loop to keep the time handler's time synchronized with the RTC.
  * Time base refreshTB is used to control how often the time is refreshed.
  */
-void t4h_refresh_time(time_h_t * T);
+bool t4h_refresh_time(time_h_t * T, bool * alarmCheck){
+    if(tb_check(&T->refreshTB)){
+        tb_next(&T->refreshTB);
+        if(rtc_hw->ints & RTC_INTS_RTC_BITS){
+            rtc_hw->intr |= RTC_INTS_RTC_BITS; // Clear the RTC interrupt
 
+            T->state = T4H_ALARM_READY; // Set the alarm state to ready
+        }
+        return true; // Time to refresh
+    }
+    return false; // Not time to refresh yet
+}
 
+bool t4h_is_time_to_refresh(time_h_t * T){
+    if(T->time2Refresh){
+        T->time2Refresh = false; // Reset the flag
+        return true; // Time to refresh
+    }
+    return false; // Not time to refresh yet
+}
 
+/**
+ * \fn alarm_state_t t4h_get_alarm_state(time_h_t * T)
+ * \brief Get the current alarm state from the time handler
+ * \param T Pointer to time handler data structure
+ * \returns The current alarm state (T4H_ALARM_READY, T4H_ALARM_ON, T4H_ALARM_OFF, T4H_ALARM_SUSPENDED)
+ */
+alarm_state_t t4h_get_alarm_state(time_h_t * T){
+    return T->state; // Return the current alarm state  
+}
 
  #endif

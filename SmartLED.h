@@ -12,7 +12,9 @@
 #define __SMART_LED_H__
 
 #include <stdint.h>
+#include <stdio.h>
 #include "hardware/gpio.h"
+#include "pico/stdlib.h"
 #include "TimeBase.h"
 
 typedef struct{
@@ -158,6 +160,81 @@ static inline void sLED_set_pulse_period(smart_led_t * SL,uint32_t period){
 static inline void sLED_set_blink_freq(smart_led_t * SL,uint32_t freq){
     SL->blinkFreq = freq;
     SL->blinkTB.delta = 1000000/(2*freq);
+}
+
+void testLED(uint8_t numGPIO){
+    smart_led_t SL;
+    sLED_init(&SL,numGPIO);
+    printf("TESTING LED!!!!\n");
+    sleep_ms(1000);
+    printf("Turn ON LED\n");
+    sLED_on(&SL);
+    sleep_ms(2000);
+    printf("Turn OFF LED\n");
+    sLED_off(&SL);
+    sleep_ms(2000);
+    printf("Toggle LED 10 Times\n");
+    for(int i=0;i<10;i++){
+        sLED_toggle(&SL);
+        sleep_ms(1000);
+    }
+    
+    printf("Light ON Pulse 3 seconds\n");
+    sLED_off(&SL);
+    sLED_set_pulse_period(&SL,3000000);
+    sLED_pulse(&SL);
+    uint16_t cnt = 0;
+    while(cnt<=10000){
+        sLED_process_pulse(&SL);
+        cnt++;
+        printf("%d sec\n",cnt);
+        sleep_ms(10);
+    }
+
+    printf("Light OFF Pulse 5 seconds\n");
+    sLED_on(&SL);
+    sLED_set_pulse_period(&SL,5000000);
+    sLED_pulse(&SL);
+    cnt = 0;
+    while(cnt<=10000){
+        sLED_process_pulse(&SL);
+        cnt++;
+        if(!(cnt%1000))
+            printf("%d sec\n",cnt);
+        sleep_ms(10);
+    }
+
+    printf("LED blinking during 10 seconds at 2 Hz, and it finishes ON");
+    sLED_off(&SL);
+    sLED_set_blink_freq(&SL,2);
+    sLED_start_blink(&SL);
+    cnt = 0;
+    while(cnt<=12000){
+        sLED_process_blink(&SL);
+        cnt++;
+        if(!(cnt%1000))
+            printf("%d sec\n",cnt);
+        sleep_ms(10);
+        if(cnt==10000){
+            sLED_stop_blink(&SL,true);
+        }
+    }
+
+    printf("LED blinking during 5 seconds at 4 Hz, and it finishes OFF");
+    sLED_off(&SL);
+    sLED_set_blink_freq(&SL,4);
+    sLED_start_blink(&SL);
+    cnt = 0;
+    while(cnt<=10000){
+        sLED_process_blink(&SL);
+        cnt++;
+        if(!(cnt%1000))
+            printf("%d sec\n",cnt);
+        sleep_ms(10);
+        if(cnt==5000){
+            sLED_stop_blink(&SL,false);
+        }
+    }
 }
 
 #endif

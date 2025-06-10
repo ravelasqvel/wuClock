@@ -4,187 +4,117 @@
 #include "SevenSegments.h"
 #include "SmartBuzzer.h"
 #include "SmartLED.h"
+#include "WatchUI.h"
+#include "Time4H.h"
 
+
+watch_ui_t watchUI;  ///< Global variable for the watch UI
+time_h_t timeHandler;  ///< Global variable for the time handler
+ui_event_t events;  ///< Array to hold events from push buttons
+
+
+void (* CurrentState)(void);
+void StateSetTime(void);
+void StateSetAlarm(void);
+void StateSetSnooze(void);
+void StateShowDate(void);
+void StateNormal(void);
+void StateAlarm(void);
 
 void main(void)
 {
     stdio_init_all();
+    watch_ui_init(&watchUI);  ///< Initialize the watch UI
+    t4h_init(&timeHandler);  ///< Initialize the time handler
 
+    CurrentState = StateNormal;
+
+    printf("Hello, world!\n");
+        sleep_ms(1000);
     while (true) {
-        printf("Hello, world!\n");
-        sleep_ms(1000);
+        CurrentState();  // Call the current state function
     }
 }
 
-void testLED(uint8_t numGPIO){
-    smart_led_t SL;
-    sLED_init(&SL,numGPIO);
-    printf("TESTING LED!!!!\n");
-    sleep_ms(1000);
-    printf("Turn ON LED\n");
-    sLED_on(&SL);
-    sleep_ms(2000);
-    printf("Turn OFF LED\n");
-    sLED_off(&SL);
-    sleep_ms(2000);
-    printf("Toggle LED 10 Times\n");
-    for(int i=0;i<10;i++){
-        sLED_toggle(&SL);
-        sleep_ms(1000);
+
+
+void StateNormal(void){
+    t4h_refresh_time(&timeHandler);  ///< Refresh the time handler
+    if(t4h_is_time_to_refresh(&timeHandler)){  ///< Check if it's time to refresh the display
+        char hour[3];
+        char min[3];
+
+        uint8_t h = t4h_get_hour(&timeHandler);  ///< Get the current hour
+        uint8_t m = t4h_get_minute(&timeHandler);  ///< Get the current minute
+
+        itoa(h, hour, 10);  ///< Convert hour to string
+        itoa(m, min, 10);  ///< Convert minute to string
+
+        ss_set_digit(&watchUI.ssDisplay, 0, hour[0] - '0');  ///< Set the first digit of the display to the first character of the hour
+        ss_set_digit(&watchUI.ssDisplay, 1, hour[1] - '0');  ///< Set the second digit of the display to the second character of the hour
+        ss_set_digit(&watchUI.ssDisplay, 2, min[0] - '0');  ///< Set the third digit of the display to the first character of the minute
+        ss_set_digit(&watchUI.ssDisplay, 3, min[1] - '0');  ///< Set the fourth digit of the display to the second character of the minute
     }
+    watch_ui_process(&watchUI, WATCH_UI_STATE_NORMAL, events);  ///< Process the watch UI in normal state
+
+    if(t4h_get_alarm_state(&timeHandler) == T4H_ALARM_READY){  ///< Check if the alarm is on
+       CurrentState = StateAlarm;  ///< Change state to alarm state
+    }
+
+    if(events.all){
+        if(events.BITS.set_time == TWICE){  ///< Check if the set time button was pressed
+            CurrentState = StateSetTime;  ///< Change state to set time state
+        }
+        if(events.BITS.set_alarm == ONCE){  ///< Check if the set alarm button was pressed
+            t4h_enable_alarm(&timeHandler);  ///< Enable the alarm in the time handler
+        }
+        else if(events.BITS.set_alarm == TWICE){  ///< Check if the set alarm button was pressed
+            CurrentState = StateSetAlarm;  ///< Change state to set alarm state
+        }
+        if(events.BITS.snooze == TWICE){  ///< Check if the snooze button was pressed
+            CurrentState = StateSetSnooze;  ///< Change state to snooze state
+        }
+        if(events.BITS.show_date == TWICE){  ///< Check if the show date button was pressed
+            CurrentState = StateShowDate;  ///< Change state to show date state
+        }
+    }
+}
+
+void StateAlarm(void){
+    t4h_refresh_time(&timeHandler);  ///< Refresh the time handler
+    if(t4h_is_time_to_refresh(&timeHandler)){  ///< Check if it's time to refresh the display
+        char hour[3];
+        char min[3];
+
+        uint8_t h = t4h_get_hour(&timeHandler);  ///< Get the current hour
+        uint8_t m = t4h_get_minute(&timeHandler);  ///< Get the current minute
+
+        itoa(h, hour, 10);  ///< Convert hour to string
+        itoa(m, min, 10);  ///< Convert minute to string
+
+        ss_set_digit(&watchUI.ssDisplay, 0, hour[0] - '0');  ///< Set the first digit of the display to the first character of the hour
+        ss_set_digit(&watchUI.ssDisplay, 1, hour[1] - '0');  ///< Set the second digit of the display to the second character of the hour
+        ss_set_digit(&watchUI.ssDisplay, 2, min[0] - '0');  ///< Set the third digit of the display to the first character of the minute
+        ss_set_digit(&watchUI.ssDisplay, 3, min[1] - '0');  ///< Set the fourth digit of the display to the second character of the minute
     
-    printf("Light ON Pulse 3 seconds\n");
-    sLED_off(&SL);
-    sLED_set_pulse_period(&SL,3000000);
-    sLED_pulse(&SL);
-    uint16_t cnt = 0;
-    while(cnt<=10000){
-        sLED_process_pulse(&SL);
-        cnt++;
-        printf("%d sec\n",cnt);
-        sleep_ms(10);
+        CurrentState = StateNormal;
     }
-
-    printf("Light OFF Pulse 5 seconds\n");
-    sLED_on(&SL);
-    sLED_set_pulse_period(&SL,5000000);
-    sLED_pulse(&SL);
-    cnt = 0;
-    while(cnt<=10000){
-        sLED_process_pulse(&SL);
-        cnt++;
-        if(!(cnt%1000))
-            printf("%d sec\n",cnt);
-        sleep_ms(10);
-    }
-
-    printf("LED blinking during 10 seconds at 2 Hz, and it finishes ON");
-    sLED_off(&SL);
-    sLED_set_blink_freq(&SL,2);
-    sLED_start_blink(&SL);
-    cnt = 0;
-    while(cnt<=12000){
-        sLED_process_blink(&SL);
-        cnt++;
-        if(!(cnt%1000))
-            printf("%d sec\n",cnt);
-        sleep_ms(10);
-        if(cnt==10000){
-            sLED_stop_blink(&SL,true);
-        }
-    }
-
-    printf("LED blinking during 5 seconds at 4 Hz, and it finishes OFF");
-    sLED_off(&SL);
-    sLED_set_blink_freq(&SL,4);
-    sLED_start_blink(&SL);
-    cnt = 0;
-    while(cnt<=10000){
-        sLED_process_blink(&SL);
-        cnt++;
-        if(!(cnt%1000))
-            printf("%d sec\n",cnt);
-        sleep_ms(10);
-        if(cnt==5000){
-            sLED_stop_blink(&SL,false);
-        }
-    }
-}
-
-void testPB(uint8_t numGPIO){
-    push_button_t PB;
-    pb_init(&PB,0,0,numGPIO);
-    printf("TESTING PUSH BUTTON!!!!\n");
-    sleep_ms(1000);
-    printf("Let's capture an event ONCE.\n\n Please press push button once...\n");
-    pb_event_t epb = NONE;
-    time_base_t tout;
-    tb_init(&tout,5000000,true);
-    while(epb==NONE){
-        PB.PBProcess(&PB);
-        epb = pb_get_event(&PB);
-        if(tb_check(&tout))
-            break;
-    }
-    if(epb==ONCE){
-        printf("Well done!!! Event detected");
-    }
-    else{
-        printf("We might have a problem!!! ONCE event wasn't detected in the last 5 seconds");
-    }
-    sleep_ms(1000);
-
-    printf("Let's capture an event TWICE.\n\n Please press push button twice in less than one second...\n");
-    epb = NONE;
-    tb_init(&tout,5000000,true);
-    while(epb==NONE){
-        PB.PBProcess(&PB);
-        epb = pb_get_event(&PB);
-        if(tb_check(&tout))
-            break;
-    }
-    if(epb==TWICE)
-    {
+    watch_ui_process(&watchUI, WATCH_UI_STATE_ALARM, events);  ///< Process the watch UI in normal state
+    if(events.all){
         
-        printf("Well done!!!  Event detected");
-    }
-    else{
-
-        printf("We might have a problem!!! TWICE event wasn't detected in the last 5 seconds");
-    }
-}
-
-
-void testBuzzer(uint8_t numGPIO){
-    buzzer_t B;
-    buzzer_init(&B,numGPIO);
-    printf("TESTING BUZZZER!!!\n");
-    sleep_ms(1000);
-    printf("Turn ON buzzer\n");
-    buzzer_on(&B);
-    sleep_ms(2000);
-    printf("Turn OFF buzzer\n");
-    buzzer_off(&B);
-    sleep_ms(2000);
-        
-    printf("Buzzer Beep 0.5 seconds\n");
-    buzzer_set_beep_period(&B,500000);
-    buzzer_beep(&B);
-    uint16_t cnt = 0;
-    while(cnt<=2000){
-        buzzer_process_beep(&B);
-        cnt++;
-        printf("%d sec\n",cnt);
-        sleep_ms(10);
-    }
-
-    printf("Buzzer Beep 3 seconds\n");
-    buzzer_set_beep_period(&B,3000000);
-    buzzer_beep(&B);
-    cnt = 0;
-    while(cnt<=5000){
-        buzzer_process_beep(&B);
-        cnt++;
-        printf("%d sec\n",cnt);
-        sleep_ms(10);
-    }
-
-    printf("Buzzer rings during 10 seconds at 2 Hz");
-    buzzer_set_ring_freq(&B,2);
-    buzzer_start_ring(&B);
-    cnt = 0;
-    while(cnt<=12000){
-        buzzer_process_ring(&B);
-        cnt++;
-        if(!(cnt%1000))
-            printf("%d sec\n",cnt);
-        sleep_ms(10);
-        if(cnt==10000){
-            buzzer_stop_ring(&B);
+        if(events.BITS.set_alarm){  ///< Check if the set alarm button was pressed
+            t4h_disable_alarm(&timeHandler);  ///< Enable the alarm in the time handler
+            CurrentState = StateNormal;  ///< Change state to normal state
+        }
+        if(events.BITS.snooze){  ///< Check if the snooze button was pressed
+            CurrentState = StateSnooze;  ///< Change state to snooze state
         }
     }
-}
-
-void testSSDisplay(uint32_t segMask, uint32_t disMask, uint8_t numD){
 
 }
+
+void StateSetTime(void){}
+void StateSetAlarm(void){}
+void StateSetSnooze(void){}
+void StateShowDate(void){}
+void StateSnooze(void){}

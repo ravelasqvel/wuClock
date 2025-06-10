@@ -28,6 +28,20 @@ typedef enum {
     WATCH_UI_STATE_SNOOZE
 } watch_ui_state_t;
 
+typedef union{
+    uint16_t all;
+    struct 
+    {
+        pb_event_t set_time : 2;         /* data */
+        pb_event_t set_alarm : 2;        /* data */
+        pb_event_t plus : 2;             /* data */
+        pb_event_t minus : 2;            /* data */
+        pb_event_t snooze : 2;           /* data */
+        pb_event_t show_date : 2;        /* data */
+    } BITS;
+} ui_event_t;
+
+
 typedef struct  {
     push_button_t pbSetTime;      ///< Push button for setting time
     push_button_t pbSetAlarm;     ///< Push button for setting alarm
@@ -68,53 +82,48 @@ void watch_ui_init(watch_ui_t *ui) {
     sLED_init(&ui->ledHourDOWN, 26); ///< Initialize smart LED for hour decrement indication on GPIO 11
 }
 
-void watch_ui_process(watch_ui_t *ui, watch_ui_state_t state, pb_event_t *events) {
+void watch_ui_process(watch_ui_t *ui, watch_ui_state_t state, ui_event_t *events) {
 
     ss_refresh(&ui->ssDisplay); ///< Refresh the seven segment display
-    events[0] = NONE; ///< set time event
-    events[1] = NONE; ///< set alarm event
-    events[2] = NONE; ///< plus event
-    events[3] = NONE; ///< minus event
-    events[4] = NONE; ///< snooze event
-    events[5] = NONE; ///< show date event
+    events->all = 0; ///< set time event
     switch (state)
     {
     case WATCH_UI_STATE_NORMAL:
-        events[0] = pb_get_event(&ui->pbSetTime);      ///< Process push button for setting time
-        events[1] = pb_get_event(&ui->pbSetAlarm);     ///< Process push button for setting alarm
-        events[4] = pb_get_event(&ui->pbSnooze);       ///< Process push button for snoozing alarms
-        events[5] = pb_get_event(&ui->pbShowDate);     ///< Process push button for showing date
+        events->BITS.set_time = pb_get_event(&ui->pbSetTime);      ///< Process push button for setting time
+        events->BITS.set_alarm = pb_get_event(&ui->pbSetAlarm);     ///< Process push button for setting alarm
+        events->BITS.snooze = pb_get_event(&ui->pbSnooze);       ///< Process push button for snoozing alarms
+        events->BITS.show_date = pb_get_event(&ui->pbShowDate);     ///< Process push button for showing date
         sLED_process_blink(&ui->ledHourUP);  ///< Process smart LED for hour increment indication
         sLED_process_blink(&ui->ledHourDOWN);///< Process smart LED for hour decrement indication
         break;
     case WATCH_UI_STATE_SET_TIME:
         // Handle setting time state
-        events[0] = pb_get_event(&ui->pbSetTime);
-        events[2] = pb_get_event(&ui->pbPlus);
-        events[3] = pb_get_event(&ui->pbMinus);
+        events->BITS.set_time = pb_get_event(&ui->pbSetTime);
+        events->BITS.plus = pb_get_event(&ui->pbPlus);
+        events->BITS.minus = pb_get_event(&ui->pbMinus);
         break;
     case WATCH_UI_STATE_SET_ALARM:
         // Handle setting time state
-        events[1] = pb_get_event(&ui->pbSetAlarm);
-        events[2] = pb_get_event(&ui->pbPlus);
-        events[3] = pb_get_event(&ui->pbMinus);
+        events->BITS.set_alarm = pb_get_event(&ui->pbSetAlarm);
+        events->BITS.plus = pb_get_event(&ui->pbPlus);
+        events->BITS.minus = pb_get_event(&ui->pbMinus);
         break;
     case WATCH_UI_STATE_SET_SNOOZE:
         // Handle setting snooze state
-        events[4] = pb_get_event(&ui->pbSnooze);
-        events[2] = pb_get_event(&ui->pbPlus);
-        events[3] = pb_get_event(&ui->pbMinus);
+        events->BITS.snooze = pb_get_event(&ui->pbSnooze);
+        events->BITS.plus = pb_get_event(&ui->pbPlus);
+        events->BITS.minus = pb_get_event(&ui->pbMinus);
         break;
     case WATCH_UI_STATE_ALARM:
         // Handle alarm state
-        events[1] = pb_get_event(&ui->pbSetAlarm);     ///< Process push button for setting alarm
-        events[4] = pb_get_event(&ui->pbSnooze);       ///< Process push button for snoozing alarms
+        events->BITS.set_alarm = pb_get_event(&ui->pbSetAlarm);     ///< Process push button for setting alarm
+        events->BITS.snooze = pb_get_event(&ui->pbSnooze);       ///< Process push button for snoozing alarms
         sLED_process_blink(&ui->ledHourUP);  ///< Process smart LED for alarm indication
         sLED_process_blink(&ui->ledHourDOWN);///< Process smart LED for hour decrement indication
         buzzer_process_ring(&ui->buzzer);       ///< Process smart buzzer for audio feedback
         break;
     case WATCH_UI_STATE_SNOOZE:
-        events[1] = pb_get_event(&ui->pbSetAlarm);     ///< Process push button for setting alarm
+        events->BITS.set_alarm = pb_get_event(&ui->pbSetAlarm);     ///< Process push button for setting alarm
         sLED_process_blink(&ui->ledAlarm);  ///< Process smart LED for snooze indication
         sLED_process_blink(&ui->ledHourUP);  ///< Process smart LED for hour increment indication
         sLED_process_blink(&ui->ledHourDOWN);///< Process smart LED for hour decrement indication

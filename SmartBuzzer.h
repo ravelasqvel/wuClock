@@ -12,7 +12,9 @@
 #define __SMART_BUZZER_H__
 
 #include <stdint.h>
+#include <stdio.h>
 #include "hardware/gpio.h"
+#include "pico/stdlib.h"
 #include "TimeBase.h"
 
 typedef struct{
@@ -153,6 +155,56 @@ static inline void buzzer_set_beep_period(buzzer_t * B,uint32_t period){
 static inline void buzzer_set_ring_freq(buzzer_t * B,uint32_t freq){
     B->ringFreq = freq;
     B->ringTB.delta = 1000000/(2*freq);
+}
+
+void testBuzzer(uint8_t numGPIO){
+    buzzer_t B;
+    buzzer_init(&B,numGPIO);
+    printf("TESTING BUZZZER!!!\n");
+    sleep_ms(1000);
+    printf("Turn ON buzzer\n");
+    buzzer_on(&B);
+    sleep_ms(2000);
+    printf("Turn OFF buzzer\n");
+    buzzer_off(&B);
+    sleep_ms(2000);
+        
+    printf("Buzzer Beep 0.5 seconds\n");
+    buzzer_set_beep_period(&B,500000);
+    buzzer_beep(&B);
+    uint16_t cnt = 0;
+    while(cnt<=2000){
+        buzzer_process_beep(&B);
+        cnt++;
+        printf("%d sec\n",cnt);
+        sleep_ms(10);
+    }
+
+    printf("Buzzer Beep 3 seconds\n");
+    buzzer_set_beep_period(&B,3000000);
+    buzzer_beep(&B);
+    cnt = 0;
+    while(cnt<=5000){
+        buzzer_process_beep(&B);
+        cnt++;
+        printf("%d sec\n",cnt);
+        sleep_ms(10);
+    }
+
+    printf("Buzzer rings during 10 seconds at 2 Hz");
+    buzzer_set_ring_freq(&B,2);
+    buzzer_start_ring(&B);
+    cnt = 0;
+    while(cnt<=12000){
+        buzzer_process_ring(&B);
+        cnt++;
+        if(!(cnt%1000))
+            printf("%d sec\n",cnt);
+        sleep_ms(10);
+        if(cnt==10000){
+            buzzer_stop_ring(&B);
+        }
+    }
 }
 
 #endif
