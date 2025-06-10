@@ -211,8 +211,16 @@ static inline void ss_disable_display(ss_config_t *SS, uint8_t digit){
     assert((digit < SS->numD) && "ERROR!!! the digit isn't configured");
     SS->blinkMask |= (1<<digit);
 }
+/**
+ * \fn void ss_test(uint32_t segMask, uint32_t disMask, uint8_t numD, ss_type_t type)
+ * \brief Test the seven segments display
+ * \param segMask   32 bit mask indicating the 8 GPIOs used for segments (p-MSB, ... , a-LSB)
+ * \param disMask   32 bit mask indicating the NumD GPIOS for controlling/multiplexing the displays
+ * \param numD      Total number of seven segment displays
+ * \param type      Display type: common anode (COMMON_ANODE) or common cathode (COMMON_CATHODE)
+ * \details This function initializes the seven segments display with the provided parameters and starts the multiplexing process.
+ */
+void ss_test(uint32_t segMask, uint32_t disMask, uint8_t numD, ss_type_t type);
 
-void testSSDisplay(uint32_t segMask, uint32_t disMask, uint8_t numD){
 
-}
- #endif
+#endif

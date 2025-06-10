@@ -38,9 +38,9 @@ pico_sdk_init()
 
 add_executable(wuClock wuClock.c PushButton.c SevenSegments.c TimeBase.c)
 
-# target_compile_definitions(wuClock PRIVATE
-#   PICO_INCLUDE_RTC_DATETIME=1 
-#)
+ target_compile_definitions(wuClock PRIVATE
+   PICO_INCLUDE_RTC_DATETIME=1 
+)
 
 pico_set_program_name(wuClock "wuClock")
 pico_set_program_version(wuClock "0.1")
@@ -51,7 +51,7 @@ pico_enable_stdio_usb(wuClock 1)
 
 # Add the standard library to the build
 target_link_libraries(wuClock
-        pico_stdlib hardware_gpio hardware_rtc)
+        pico_stdlib hardware_gpio hardware_rtc hardware_timer)
 
 # Add the standard include files to the build
 target_include_directories(wuClock PRIVATE

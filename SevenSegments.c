@@ -191,3 +191,9 @@ void ss_refresh(ss_config_t *SS){
         }
     }
 }
+
+void ss_test(uint32_t segMask, uint32_t disMask, uint8_t numD, ss_type_t type){ 
+    printf("Testing Seven Segments with %d displays\n",numD);
+    ss_config_t SS;
+    ss_init(&SS,numD,type,segMask,disMask);
+}

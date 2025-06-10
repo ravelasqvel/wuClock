@@ -10,7 +10,7 @@
 
 #ifndef __TIME_4H_H_
 #define __TIME_4H_H_
-#define PICO_INCLUDE_RTC_DATETIME
+//#define PICO_INCLUDE_RTC_DATETIME
 
 #include <stdint.h>
 #include <stdio.h>
@@ -18,6 +18,7 @@
 #include "pico/types.h"
 #include "TimeBase.h"
 
+#ifndef PICO_INCLUDE_RTC_DATETIME
 typedef struct {
     int16_t year;    ///< 0..4095
     int8_t month;    ///< 1..12, 1 is January
@@ -27,21 +28,21 @@ typedef struct {
     int8_t min;      ///< 0..59
     int8_t sec;      ///< 0..59
 } datetime_t;
+#endif
 
 typedef enum {T4H_DAILY_ALARM,T4H_WEEKLY_ALARM, T4H_DATE_ALARM} alarm_type_t;
 typedef enum {T4H_ALARM_READY,T4H_ALARM_ON, T4H_ALARM_OFF, T4H_ALARM_SUSPENDED} alarm_state_t;
 typedef enum {T4H_SUNDAY, T4H_MONDAY, T4H_TUESDAY, T4H_WEDNESDAY, T4H_THURSDAY, T4H_FRIDAY, T4H_SATURDAY} dotw_t;
 
 typedef struct{
-    datetime_t date;
-    datetime_t alarm;
-    alarm_type_t type;
-    alarm_state_t state;
-    time_base_t postTB;
-    time_base_t refreshTB;
-    uint8_t postPeriod;
-    bool time2Refresh;
-}time_h_t;\
+    datetime_t date; ///< Current date and time
+    datetime_t alarm; ///< Alarm date and time
+    alarm_type_t type; ///< Type of the alarm (daily, weekly, date)
+    alarm_state_t state; ///< State of the alarm (ready, on, off, suspended)
+    time_base_t postTB; ///< Time base for posting updates
+    time_base_t refreshTB; ///< Time base for refreshing the display
+    uint8_t postPeriod; ///< Post period in minutes
+}time_h_t; ///< Time handler data structure
 
 /**
  * \fn void t4h_init(time_h_t * T)
@@ -50,7 +51,23 @@ typedef struct{
  * \param T Pointer to time handler data structure
  * \details This function initializes the time handler data structure with default values.
  */
-void t4h_init(time_h_t * T);
+void t4h_init(time_h_t * T){
+    T->date.year = 2025; // Default year
+    T->date.month = 1; // Default month
+    T->date.day = 1; // Default day
+    T->date.dotw = T4H_SUNDAY; // Default day of the week
+    T->date.hour = 0; // Default hour
+    T->date.min = 0; // Default minute
+    T->date.sec = 0; // Default second
+
+    T->type = T4H_DAILY_ALARM; // Default alarm type
+    T->state = T4H_ALARM_OFF; // Alarm is initially off
+
+    tb_init(&T->postTB,300000000,false); // Initialize post time base with a period of 1 second
+    tb_init(&T->refreshTB,60000000,false); // Initialize refresh time base with a period of 1 second
+
+    T->postPeriod = 5; // Set post period in minutes
+}
 /**
  * \fn void t4h_set_time_date(time_h_t * T, uint8_t day, uint8_t month, uint16_t year)
  * \brief Set the date in the time handler
@@ -331,6 +348,7 @@ uint16_t t4h_get_year(time_h_t * T);
  * \fn void t4h_refresh_time(time_h_t * T)
  * \brief Refresh the time in the time handler from the RTC
  * \param T Pointer to time handler data structure  
+ * \returns true if the time was refreshed, false otherwise
  * \details This function refreshes the time in the time handler by reading the current time from the RTC module.
  * It updates the time handler's date, hour, minute, second, day, month, and year fields with the current RTC values.
  * This method controls the postpond feature through the postTB time base. When the alarm is postponed,
@@ -338,11 +356,11 @@ uint16_t t4h_get_year(time_h_t * T);
  * \note This function should be called in the main loop to keep the time handler's time synchronized with the RTC.
  * Time base refreshTB is used to control how often the time is refreshed.
  */
-bool t4h_refresh_time(time_h_t * T, bool * alarmCheck){
+bool t4h_refresh_time(time_h_t * T){
     if(tb_check(&T->refreshTB)){
         tb_next(&T->refreshTB);
         if(rtc_hw->ints & RTC_INTS_RTC_BITS){
-            rtc_hw->intr |= RTC_INTS_RTC_BITS; // Clear the RTC interrupt
+            //rtc_hw->intr |= RTC_INTS_RTC_BITS; // Clear the RTC interrupt
 
             T->state = T4H_ALARM_READY; // Set the alarm state to ready
         }
@@ -351,13 +369,6 @@ bool t4h_refresh_time(time_h_t * T, bool * alarmCheck){
     return false; // Not time to refresh yet
 }
 
-bool t4h_is_time_to_refresh(time_h_t * T){
-    if(T->time2Refresh){
-        T->time2Refresh = false; // Reset the flag
-        return true; // Time to refresh
-    }
-    return false; // Not time to refresh yet
-}
 
 /**
  * \fn alarm_state_t t4h_get_alarm_state(time_h_t * T)

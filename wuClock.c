@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "pico/stdlib.h"
 #include "PushButton.h"
 #include "SevenSegments.h"
@@ -20,6 +21,7 @@ void StateSetSnooze(void);
 void StateShowDate(void);
 void StateNormal(void);
 void StateAlarm(void);
+void StateSnooze(void);
 
 void main(void)
 {
@@ -39,8 +41,8 @@ void main(void)
 
 
 void StateNormal(void){
-    t4h_refresh_time(&timeHandler);  ///< Refresh the time handler
-    if(t4h_is_time_to_refresh(&timeHandler)){  ///< Check if it's time to refresh the display
+    //t4h_refresh_time(&timeHandler);  ///< Refresh the time handler
+    if(t4h_refresh_time(&timeHandler)){  ///< Check if it's time to refresh the display
         char hour[3];
         char min[3];
 
@@ -50,12 +52,12 @@ void StateNormal(void){
         itoa(h, hour, 10);  ///< Convert hour to string
         itoa(m, min, 10);  ///< Convert minute to string
 
-        ss_set_digit(&watchUI.ssDisplay, 0, hour[0] - '0');  ///< Set the first digit of the display to the first character of the hour
-        ss_set_digit(&watchUI.ssDisplay, 1, hour[1] - '0');  ///< Set the second digit of the display to the second character of the hour
-        ss_set_digit(&watchUI.ssDisplay, 2, min[0] - '0');  ///< Set the third digit of the display to the first character of the minute
-        ss_set_digit(&watchUI.ssDisplay, 3, min[1] - '0');  ///< Set the fourth digit of the display to the second character of the minute
+        ss_update_value(&watchUI.ssDisplay, 0, hour[0] - '0');  ///< Set the first digit of the display to the first character of the hour
+        ss_update_value(&watchUI.ssDisplay, 1, hour[1] - '0');  ///< Set the second digit of the display to the second character of the hour
+        ss_update_value(&watchUI.ssDisplay, 2, min[0] - '0');  ///< Set the third digit of the display to the first character of the minute
+        ss_update_value(&watchUI.ssDisplay, 3, min[1] - '0');  ///< Set the fourth digit of the display to the second character of the minute
     }
-    watch_ui_process(&watchUI, WATCH_UI_STATE_NORMAL, events);  ///< Process the watch UI in normal state
+    watch_ui_process(&watchUI, WATCH_UI_STATE_NORMAL, &events);  ///< Process the watch UI in normal state
 
     if(t4h_get_alarm_state(&timeHandler) == T4H_ALARM_READY){  ///< Check if the alarm is on
        CurrentState = StateAlarm;  ///< Change state to alarm state
@@ -81,8 +83,8 @@ void StateNormal(void){
 }
 
 void StateAlarm(void){
-    t4h_refresh_time(&timeHandler);  ///< Refresh the time handler
-    if(t4h_is_time_to_refresh(&timeHandler)){  ///< Check if it's time to refresh the display
+    ///< Refresh the time handler
+    if(t4h_refresh_time(&timeHandler)){  ///< Check if it's time to refresh the display
         char hour[3];
         char min[3];
 
@@ -92,14 +94,14 @@ void StateAlarm(void){
         itoa(h, hour, 10);  ///< Convert hour to string
         itoa(m, min, 10);  ///< Convert minute to string
 
-        ss_set_digit(&watchUI.ssDisplay, 0, hour[0] - '0');  ///< Set the first digit of the display to the first character of the hour
-        ss_set_digit(&watchUI.ssDisplay, 1, hour[1] - '0');  ///< Set the second digit of the display to the second character of the hour
-        ss_set_digit(&watchUI.ssDisplay, 2, min[0] - '0');  ///< Set the third digit of the display to the first character of the minute
-        ss_set_digit(&watchUI.ssDisplay, 3, min[1] - '0');  ///< Set the fourth digit of the display to the second character of the minute
+        ss_update_value(&watchUI.ssDisplay, 0, hour[0] - '0');  ///< Set the first digit of the display to the first character of the hour
+        ss_update_value(&watchUI.ssDisplay, 1, hour[1] - '0');  ///< Set the second digit of the display to the second character of the hour
+        ss_update_value(&watchUI.ssDisplay, 2, min[0] - '0');  ///< Set the third digit of the display to the first character of the minute
+        ss_update_value(&watchUI.ssDisplay, 3, min[1] - '0');  ///< Set the fourth digit of the display to the second character of the minute
     
         CurrentState = StateNormal;
     }
-    watch_ui_process(&watchUI, WATCH_UI_STATE_ALARM, events);  ///< Process the watch UI in normal state
+    watch_ui_process(&watchUI, WATCH_UI_STATE_ALARM, &events);  ///< Process the watch UI in normal state
     if(events.all){
         
         if(events.BITS.set_alarm){  ///< Check if the set alarm button was pressed
